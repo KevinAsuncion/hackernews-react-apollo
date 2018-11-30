@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import gql from "graphql-tag";
 import { Mutation } from "react-apollo";
 import { FEED_QUERY } from "./LinkList";
+import {LINKS_PER_PAGE} from '../constants';
 
 const POST_MUTATION = gql`
   mutation PostMutation($description: String!, $url: String!) {
@@ -22,38 +23,33 @@ class CreateLink extends Component {
 
   render() {
     const { description, url } = this.state;
-    return (
-      <div>
+    return <div>
         <div className=" flex flex-column mt3">
-          <input
-            className="mb2"
-            type="text"
-            value={description}
-            placeholder="Enter a description for the link"
-            onChange={e => this.setState({ description: e.target.value })}
-          />
-          <input
-            className="mb2"
-            type="text"
-            value={url}
-            placeholder="Enter a url for the link"
-            onChange={e => this.setState({ url: e.target.value })}
-          />
+          <input className="mb2" type="text" value={description} placeholder="Enter a description for the link" onChange={e => this.setState(
+                { description: e.target.value }
+              )} />
+          <input className="mb2" type="text" value={url} placeholder="Enter a url for the link" onChange={e => this.setState(
+                { url: e.target.value }
+              )} />
         </div>
-        <Mutation
-          mutation={POST_MUTATION}
-          variables={{ description, url }}
-          onCompleted={() => this.props.history.push("/")}
-          update={(store, { data: { post } }) => {
-            const data = store.readQuery({ query: FEED_QUERY });
+        <Mutation mutation={POST_MUTATION} variables={{ description, url }} onCompleted={() => this.props.history.push("/new/1")} update={(store, { data: { post } }) => {
+            const first = LINKS_PER_PAGE;
+            const skip = 0;
+            const orderBy = "createdAt_DESC";
+            const data = store.readQuery({
+              query: FEED_QUERY,
+              variables: { first, skip, orderBy }
+            });
             data.feed.links.unshift(post);
-            store.writeQuery({ query: FEED_QUERY, data });
-          }}
-        >
+            store.writeQuery({
+              query: FEED_QUERY,
+              data,
+              variables: { first, skip, orderBy }
+            });
+          }}>
           {postMutation => <button onClick={postMutation}>Submit</button>}
         </Mutation>
-      </div>
-    );
+      </div>;
   }
 }
 
